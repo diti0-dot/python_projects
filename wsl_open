@@ -1,0 +1,112 @@
+import os
+import threading
+import time
+import winsound
+import speech_recognition as sr
+import sys
+
+class Activator:
+    def __init__(self):
+        self.recognizer = sr.Recognizer()
+        self.mic = sr.Microphone()
+        self.listening = True
+        self.wsl_open = False
+        self.audio_done = threading.Event()  # To track second audio
+        self.should_exit = False
+        self.max_listen_time = 300  # 5 minutes timeout in seconds
+
+    def play_wav(self, file_path, done_event=None):
+        try:
+            if os.path.exists(file_path):
+                winsound.PlaySound(file_path, winsound.SND_FILENAME)
+                print(f"✅ Finished playing: {os.path.basename(file_path)}")
+                if done_event:
+                    done_event.set()
+            else:
+                print(f"❌ Audio file not found: {file_path}")
+        except Exception as e:
+            print(f"❌ Error playing audio: {e}")
+            if done_event:
+                done_event.set()
+
+    def open_wsl(self):
+        shortcut_path = r"C:\Users\deept\Desktop\WSL.lnk" 
+        try:
+            os.startfile(shortcut_path)
+            self.wsl_open = True
+            print("✅ WSL shortcut opened successfully.")
+        except Exception as e:
+            print(f"❌ Error opening WSL shortcut: {e}")
+
+    def trigger(self, source="Unknown"):
+        print(f"🎉 Triggered by {source}!")
+
+        music_path = r"C:\welcome_system\startup_music.wav"
+        self.play_wav(music_path)
+
+        voice_path = r"C:\welcome_system\welcome_voice.wav"
+        threading.Thread(
+            target=self.play_wav,
+            args=(voice_path, self.audio_done),
+            daemon=True
+        ).start()
+
+        self.open_wsl()
+
+        # Wait for the second audio to finish
+        self.audio_done.wait()
+        self.should_exit = True
+        print("✅ All actions completed. Closing prompt...")
+        time.sleep(1)
+        os._exit(0)
+        sys.exit()
+
+    def listen_for_wake_word(self):
+        start_time = time.time()
+        with self.mic as source:
+            self.recognizer.adjust_for_ambient_noise(source)
+            if not self.wsl_open:
+                print("🔊 Say 'wake up'...")
+            while self.listening and not self.wsl_open:
+                elapsed = time.time() - start_time
+                if elapsed > self.max_listen_time:
+                    print("⏰ 5 minutes passed. Stopping listener.")
+                    self.should_exit = True
+                    self.listening = False
+                    break
+                try:
+                    audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=3)
+                    phrase = self.recognizer.recognize_google(audio).lower()
+                    print(f"🗣️ Heard: {phrase}")
+                    if "wake up" in phrase:
+                        self.trigger(source="Voice command")
+                        break
+                    if not self.wsl_open:
+                        print("🔊 Say 'wake up'...")
+                except sr.WaitTimeoutError:
+                    if not self.wsl_open:
+                        print("❌ Timeout waiting for phrase")
+                        print("🔊 Say 'wake up'...")
+                except sr.UnknownValueError:
+                    if not self.wsl_open:
+                        print("❌ Could not understand audio")
+                        print("🔊 Say 'wake up'...")
+                except sr.RequestError as e:
+                    if not self.wsl_open:
+                        print(f"❌ Request error: {e}")
+                        print("🔊 Say 'wake up'...")
+
+    def run(self):
+        print("🚀 System ready - say 'wake up'")
+        voice_thread = threading.Thread(target=self.listen_for_wake_word, daemon=True)
+        voice_thread.start()
+        try:
+            while not self.should_exit:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n❌ Interrupted by user. Exiting...")
+            self.listening = False
+            voice_thread.join()
+
+if __name__ == "__main__":
+    Activator().run()
