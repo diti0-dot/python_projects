@@ -1,0 +1,16 @@
+# Flight data
+processed/
+
+# VS Code settings
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
