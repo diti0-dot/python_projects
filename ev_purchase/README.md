@@ -1,9 +1,4 @@
-<img width="590" height="490" alt="image" src="https://github.com/user-attachments/assets/4dd07fc7-47db-4b2d-8fb6-f721a586496f" /><img width="590" height="490" alt="image" src="https://github.com/user-attachments/assets/34b7685a-2645-4332-b39e-81c1e887cd61" /># MINI PROJECT CANVAS
-
 ## Predicting Electric Vehicle Purchase Intent
-
-**Group members:** Diti Nenavath
-**Workshop #:**
 
 ## Table of Contents
 
@@ -118,6 +113,8 @@ Some of the areas explored include:
 * Home charging availability
 
 The goal was to make the results easier to interpret from a business perspective rather than presenting the analysis as a collection of unrelated charts.
+
+[What Drives EV Purchase Intent?](https://github.com/diti0-dot/sql-projects/tree/main/ev_purchases#what-drives-ev-purchase-intent)
 
 ---
 
