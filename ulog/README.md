@@ -87,8 +87,9 @@ For the failure flight, I scaled each moment's signals with the normal-flight sc
 
 *PCA anomaly score over flight duration*
 <p align="center">
-  <img src="figures/anomaly_score.png" alt="PCA anomaly score over flight duration" width="700">
+  <img src="https://github.com/user-attachments/assets/10bc77f2-390f-44db-9ab6-b4ce2630c516" alt="PCA anomaly score over flight duration" width="700">
 </p>
+
 
 ### Step 4: Validation Against Ground Truth
 The dataset includes an official record of the exact moment the engine failure was triggered. I compared this ground-truth timestamp against my model's detected anomaly point to check the result rather than relying on visual guesswork.
