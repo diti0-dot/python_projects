@@ -72,17 +72,17 @@ if __name__ == "__main__":
     sca, pca = fit_pca(normal_df, 0.95)
     anomaly_scores = compute_anomaly_score(failure_df, sca, pca)
 
-    threshold = anomaly_scores.mean() + 3 * anomaly_scores.std()
+    threshold = anomaly_scores.mean() +  (* anomaly_scores.std())
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
 
-    # Top: original altitude
+    # original altitude
     ax1.plot(failure_df['time_sec'], failure_df['altitude'], color='blue')
     ax1.set_ylabel('Altitude (m)')
     ax1.set_title('Altitude - Engine Failure Flight')
     ax1.grid(True)
 
-    # Bottom: anomaly score
+    # anomaly score
     ax2.plot(failure_df['time_sec'], anomaly_scores, color='orange')
     ax2.axhline(threshold, color='red', linestyle='--', label='Threshold')
     for time, score in zip(failure_df['time_sec'], anomaly_scores):
