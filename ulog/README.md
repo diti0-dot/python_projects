@@ -89,8 +89,9 @@ For the failure flight, I projected each moment's signals into PCA space and rec
 The dataset includes an official record of the exact moment the engine failure was triggered. I compared this ground-truth timestamp against my model's detected anomaly point to check real-world accuracy, rather than relying on visual guesswork.
 
 <p align="center">
-  <img src="figures/validation_combined.png" alt="PCA detection compared with ground truth failure timestamp" width="700">
+  <img src="https://github.com/user-attachments/assets/a29687c2-49ca-468e-9947-fe4dfe238546" alt="PCA detection compared with ground truth failure timestamp" width="700">
 </p>
+
 
 ## Results
 
@@ -110,7 +111,7 @@ This confirms the method detects genuine abnormal aircraft *behavior*, not just 
 ## Repository Structure
 
 ```text
-├── flight_anomaly_detection.py   # main analysis script
+├── my_file.py                    # main analysis script
 ├── figures/                      # exported graphs
 └── README.md                     # this file
 ```
