@@ -1,237 +1,72 @@
-## Predicting Electric Vehicle Purchase Intent
+# Predicting Electric Vehicle Purchase Intent
 
 ## Table of Contents
-
-* [Motivation](#motivation)
-* [Data Collection](#data-collection)
-* [Preprocessing](#preprocessing)
-* [EDA](#eda)
-* [Visualizations](#visualizations)
-* [Learning Task](#learning-task)
-* [Learning Approach](#learning-approach)
-* [Communication of Results](#communication-of-results)
-* [Data Privacy and Ethical Considerations](#data-privacy-and-ethical-considerations)
-* [Added Value](#added-value)
-
----
+- [Motivation](#motivation)
+- [Data](#data)
+- [Exploratory Analysis (SQL and Power BI)](#exploratory-analysis-sql-and-power-bi)
+- [Preprocessing](#preprocessing)
+- [Model](#model)
+- [Results](#results)
+- [Limitations and Ethical Considerations](#limitations-and-ethical-considerations)
 
 ## Motivation
+I wanted to explore what factors are associated with a person's interest in buying an electric vehicle: income, commute distance, environmental concern, range anxiety, charging access, subsidies, and demographics.
 
-I wanted to explore what factors might be associated with a person's interest in purchasing an electric vehicle.
+The project started as a data analysis exercise in SQL and Power BI, looking at the data from a business perspective. I then used what that analysis showed to build a model that predicts whether someone is likely to buy an EV, as part of the Kaggle Playground Series.
 
-The project started as a data analysis exercise, where I looked at the dataset from a business perspective and tried to understand the patterns behind EV purchase intent. I then extended the analysis into a machine learning problem to see whether those patterns could also be used to predict whether someone would buy an EV.
+## Data
+The dataset comes from Kaggle Playground Series Season 6 Episode 9, *Predicting Electric Vehicle Purchases*. It has 668,665 training rows and 286,571 test rows, with no missing values.
 
-The main things I was interested in were income, commuting distance, environmental concern, range anxiety, access to charging, subsidies, and demographic characteristics.
+Each row is a potential EV buyer, described by age, annual income, daily commute distance, city type, current car type, number of cars owned, charging stations near home and work, home charging availability, subsidy availability, environmental concern, range anxiety, and gender.
 
-I am also using this project as an opportunity to document my machine learning workflow while participating in the Kaggle Playground Series. Rather than focusing only on the final competition score, I am using the process to experiment with preprocessing, feature engineering, model selection, and evaluation.
+The target is `Will_Buy_EV` (Yes/No). The classes are imbalanced: **82.5% No and 17.5% Yes**, so accuracy alone would be misleading and I paid attention to class-level metrics.
 
----
+## Exploratory Analysis (SQL and Power BI)
+Before any modelling, I explored the data in SQL and built a Power BI dashboard to compare buyers and non-buyers across city type, income, commute distance, range anxiety, environmental concern, subsidy availability, and home charging.
 
-## Data Collection
+[What Drives EV Purchase Intent?](https://github.com/diti0-dot/sql-projects/tree/main/ev_purchases#what-drives-ev-purchase-intent)
 
-The dataset comes from the Kaggle Playground Series Season 6 Episode 9, *Predicting Electric Vehicle Purchases*.
-
-The dataset contains information about potential EV buyers, including:
-
-* Age
-* Annual income
-* Daily commute distance
-* City type
-* Current car type
-* Number of cars owned
-* Charging stations near home and work
-* Whether home charging is possible
-* Whether a subsidy is available
-* Environmental concern
-* Range anxiety
-* Gender
-* EV purchase intent
-
-The target variable is `Will_Buy_EV`, which contains `Yes` and `No`.
-
-The dataset is already provided in tabular CSV format, so the initial data collection step mainly involved loading the training and test datasets and inspecting their structure.
-
----
+This analysis is what I used to decide which variables to focus on when building features for the model, so the dashboard comes first and the model builds on it.
 
 ## Preprocessing
+- Checked shape, column types, missing values, unique values and the target distribution.
+- Mapped the binary columns (`Home_Charging_Possible`, `Subsidy_Available`) to 0/1.
+- One-hot encoded city type, current car type, gender, environmental concern level and range anxiety level.
+- Scaled the six numerical columns with `StandardScaler`, fitted on the training split only and then applied to the validation split, to avoid data leakage.
+- Added one engineered feature, `hidden_score`: a hand-weighted score combining income, environmental concern, subsidy availability and range anxiety, based on the variables that stood out in the analysis.
+- I also tried squared income and commute features and an ordinal encoding of range anxiety, but neither is in the final model.
 
-Before building a model, I first checked the shape, columns, data types, missing values, unique values, and target distribution.
+## Model
+The task is binary classification (No → 0, Yes → 1). I used **logistic regression** because it is simple and interpretable.
 
-Categorical variables needed to be converted into numerical representations before they could be used by the model.
+The setup:
+- 80/20 stratified train/validation split (`random_state=42`)
+- One-hot encoding for categoricals, standard scaling for numericals
+- `LogisticRegression` with `C=1.0` and `max_iter=5000`
+- Evaluated with ROC AUC, since the competition scores predicted probabilities rather than hard labels
 
-Binary variables such as:
+## Results
+On the validation split:
 
-* `Home_Charging_Possible`
-* `Subsidy_Available`
+| Metric | Value |
+|---|---|
+| ROC AUC | 0.9384 |
+| Accuracy | 0.8946 |
 
-were mapped to numerical values.
+Per-class results:
 
-Other categorical variables were one-hot encoded, including city type, current car type, gender, environmental concern, and range anxiety.
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| No (0) | 0.93 | 0.94 | 0.94 |
+| Yes (1) | 0.71 | 0.66 | 0.69 |
 
-For the numerical variables, I used `StandardScaler` so that variables with different ranges could be used together by the logistic regression model.
-
-The scaler was fitted only on the training data and then applied to both the training and validation sets to avoid data leakage.
-
-I also experimented with feature engineering, including squared income and commute variables, and tested different representations of environmental concern and range anxiety.
-
-One additional feature I explored was a combined score based on several of the strongest variables in the dataset. This was useful for investigating how much of the prediction signal could be captured by combining the main factors.
-
----
-
-## EDA
-
-The exploratory analysis focused on understanding the distribution of the target and how different variables relate to EV purchase intent.
-
-I looked at factors such as income, commute distance, city type, environmental concern, range anxiety, charging availability, and subsidies.
-
-One of the main observations was that EV purchase intent is not evenly distributed across the dataset. Most observations belong to the `No` class, while a smaller proportion belong to the `Yes` class.
-
-This made class-aware evaluation important when comparing models.
-
-I also explored how purchase intent changes across different categories and numerical ranges. The EDA helped identify which variables were worth investigating further during the modelling stage.
-
-The SQL and Power BI part of the project contains the main exploratory analysis and dashboard:
-
-[What Drives EV Purchase Intent?](https://github.com/diti0-dot/sql-projects/tree/main/ev_purchases#what-drives-ev-purchase-intent)
-
----
-
-## Visualizations
-
-I used visualizations to move beyond simply looking at individual columns and instead compare patterns between potential buyers and non-buyers.
-
-The Power BI dashboard focuses on the main factors associated with EV purchase intent and allows the data to be explored interactively.
-
-Some of the areas explored include:
-
-* Purchase intent by city type
-* Income
-* Daily commute distance
-* Range anxiety
-* Environmental concern
-* Subsidy availability
-* Home charging availability
-
-The goal was to make the results easier to interpret from a business perspective rather than presenting the analysis as a collection of unrelated charts.
-
-[What Drives EV Purchase Intent?](https://github.com/diti0-dot/sql-projects/tree/main/ev_purchases#what-drives-ev-purchase-intent)
-
----
-
-## Learning Task
-
-The machine learning problem is a **binary classification** task.
-
-The model predicts whether an individual is likely to purchase an electric vehicle:
-
-```text
-No  →  0
-Yes →  1
-```
-
-The target variable is:
-
-```text
-Will_Buy_EV
-```
-
-The input variables include demographic, financial, behavioural, and EV-related characteristics such as income, commute distance, environmental concern, range anxiety, charging access, subsidies, and vehicle ownership.
-
----
-
-## Learning Approach
-
-I started with logistic regression as a baseline because it provides a relatively simple and interpretable way to model binary outcomes.
-
-I also experimented with Random Forest and different preprocessing and feature engineering approaches.
-
-For evaluation, I looked at both accuracy and ROC AUC. ROC AUC is particularly important here because the Kaggle task evaluates the predicted probability of EV purchase rather than only the final class prediction.
-
-The baseline logistic regression model achieved a ROC AUC of approximately:
-
-**0.9380**
-
-After experimenting with categorical encoding and feature engineering, the ROC AUC improved to approximately:
-
-**0.9386**
-
-I also tested different values of the logistic regression regularization parameter `C`. The results showed only very small changes, suggesting that tuning the parameter further was less useful than understanding the underlying features and structure of the data.
-
-The current model uses:
-
-* Logistic Regression
-* One-hot encoding
-* Standard scaling
-* Feature engineering
-* Stratified train/test split
-* ROC AUC evaluation
-
-I am continuing to use the project to understand which modelling decisions actually make a meaningful difference rather than tuning parameters without understanding the result.
-
+The model separates buyers from non-buyers well, but it is noticeably weaker on the minority class: it finds about two thirds of the actual buyers, with about 71% precision. At a 20% false positive rate, the ROC curve shows it catching roughly 95% of buyers.
 
 <img width="590" height="490" alt="image" src="https://github.com/user-attachments/assets/dc415bdb-af23-4a67-a102-ddfd48986efb" />
+*ROC curve for the logistic regression model (AUC = 0.9384).*
 
-Figure 1. ROC curve for the logistic regression model predicting EV purchase. The model achieves an AUC of 0.9384, indicating strong discriminative ability. The curve rises steeply toward the top-left corner, meaning the model captures a high proportion of true EV buyers while keeping false positives low. Notably, at a false positive rate of just 20%, the model correctly identifies roughly 95% of actual EV buyers.
-
-
----
-
-## Communication of Results
-
-The project combines several stages of analysis rather than treating the machine learning model as the only result.
-
-The workflow is:
-
-```text
-Data
-  ↓
-Cleaning & Preprocessing
-  ↓
-SQL Exploration
-  ↓
-Python Analysis
-  ↓
-Power BI Visualization
-  ↓
-Feature Engineering
-  ↓
-Machine Learning
-  ↓
-Model Evaluation
-```
-
-The SQL and Power BI work focuses on understanding the data and communicating the main patterns.
-
-The Python work then builds on that analysis by testing whether those patterns can be used for prediction.
-
-I am also documenting the modelling process as I participate in the Kaggle Playground Series competition, using the competition as a way to experiment with different approaches and evaluate what works.
-
----
-
-## Data Privacy and Ethical Considerations
-
-The dataset does not require me to collect personal information from real individuals. It is provided as a prepared dataset for analysis and modelling.
-
-Because the task involves predicting purchasing behaviour, it is still important to be careful about interpreting the results.
-
-A model predicting EV purchase intent should not be treated as proof that a particular person will purchase an EV. The predictions represent patterns learned from the available data.
-
-Variables such as income, gender, age, and location-related characteristics can also introduce biases into a predictive model. For that reason, model performance should be considered alongside the characteristics and limitations of the dataset.
-
----
-
-## Added Value
-
-The main value of this project is the opportunity to connect several parts of the data workflow into one project.
-
-Instead of stopping at exploratory analysis, I am taking the data through:
-
-**SQL → Python → Power BI → Machine Learning**
-
-This lets me look at the same problem from different perspectives.
-
-The analysis helps identify patterns in EV purchase intent, while the machine learning stage tests whether those patterns can be used to make predictions.
-
-The project is also helping me understand practical machine learning decisions such as handling categorical variables, avoiding data leakage, dealing with class imbalance, selecting evaluation metrics, and deciding whether feature engineering actually improves a model.
-
-I will continue updating the project as I experiment with different approaches and learn more from the results.
+## Limitations and Ethical Considerations
+- The dataset is a prepared Kaggle Playground dataset, so no personal data was collected from real people. The predictions reflect patterns in this dataset and are not evidence that any particular person will buy an EV.
+- Income, gender, age and location can introduce bias into a model like this. I did not test how sensitive the predictions are to these variables.
+- `hidden_score` was weighted by hand rather than learned, so it should be read as a feature-engineering experiment, not a finding.
+- I only evaluated on a single validation split, and the model has not been compared against other algorithms.
